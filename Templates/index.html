@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | Book Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2E86C1;
+            --secondary: #1A5276;
+            --accent: #F39C12;
+            --dark-bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text: #f5f5f5;
+        }
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text);
+            font-family: 'Montserrat', sans-serif;
+            padding-top: 76px;
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            padding: 12px 0;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: white !important;
+        }
+        .navbar-brand i { color: var(--accent); margin-right: 8px; }
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            margin: 0 6px;
+        }
+        .nav-link:hover, .nav-link.active { color: white !important; }
+        .page-title {
+            font-family: 'Merriweather', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 30px 0 10px;
+        }
+        .page-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: var(--accent);
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+        .section-title {
+            font-family: 'Merriweather', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 40px 0 20px;
+            color: var(--accent);
+        }
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 22px;
+            margin-bottom: 40px;
+        }
+        .book-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.35s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+            height: 100%;
+            text-decoration: none;
+            color: inherit;
+        }
+        .book-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 16px 30px rgba(0,0,0,0.5);
+        }
+        .image-container {
+            height: 260px;
+            overflow: hidden;
+            background: #2a2a2a;
+        }
+        .book-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .book-card:hover .book-image { transform: scale(1.08); }
+        .book-details { padding: 16px; }
+        .book-title {
+            font-family: 'Merriweather', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            height: 48px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 6px;
+        }
+        .book-author {
+            color: #bbb;
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        .book-stats {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #333;
+            padding-top: 8px;
+            font-size: 0.8rem;
+        }
+        .footer {
+            background: #0a0a0a;
+            padding: 25px 0;
+            text-align: center;
+            border-top: 1px solid #333;
+            margin-top: 40px;
+        }
+        .btn-method {
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-weight: 600;
+            margin: 0 5px;
+        }
+        /* Autocomplete */
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #444;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1e1e1e;
+            border-radius: 0 0 10px 10px;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .autocomplete-items div {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            color: #eee;
+        }
+        .autocomplete-items div:hover {
+            background: #2a2a2a;
+            color: var(--accent);
+        }
+        .search-wrapper {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+    </style>
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+</head>
+<body>
+
+{% include 'navbar.html' %}
+
+<div class="container">
+
+    <!-- Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h1 class="page-title">Reader Favorites</h1>
+    <p class="text-center text-muted mb-4">Top books ranked by popularity & weighted ratings</p>
+
+    <!-- Search with Autocomplete -->
+    <div class="search-wrapper">
+        <input type="text" id="searchInput" class="form-control form-control-lg bg-dark text-white border-secondary" 
+               placeholder="🔍 Search books..." autocomplete="off">
+        <div id="autocompleteList" class="autocomplete-items"></div>
+    </div>
+
+    <!-- Method Switch -->
+    <div class="text-center mb-4">
+        <a href="{{ url_for('index', method='average') }}" 
+           class="btn btn-method {{ 'btn-primary' if method == 'average' else 'btn-outline-light' }}">
+            Average Rating
+        </a>
+        <a href="{{ url_for('index', method='weighted') }}" 
+           class="btn btn-method {{ 'btn-warning' if method == 'weighted' else 'btn-outline-light' }}">
+            Weighted Rating
+        </a>
+    </div>
+
+    {% if method == 'weighted' %}
+    <div class="text-center mb-4">
+        <label class="me-2" for="mSelect">Catalog Filter:</label>
+        <select id="mSelect" class="form-select d-inline-block w-auto bg-dark text-white border-secondary">
+            {% for val, label in [(0.01, 'All Books'), (0.50, 'Popular Reads'), (0.90, 'Top Blockbusters')] %}
+            <option value="{{ val }}" {% if val == m_value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+
+    <!-- Books Grid -->
+    <div class="books-grid" id="booksGrid">
+        {% for i in range(book_name|length) %}
+        <a href="{{ url_for('book_details', title=book_name[i]|urlencode) }}" class="book-card book-item" data-title="{{ book_name[i]|lower }}">
+            <div class="image-container">
+                 <img src="{{ normalize_image_url(image[i]) }}" class="book-image book-cover" alt="{{ book_name[i] }}"
+                     onerror="this.onerror=null;this.src='/static/book-placeholder.svg';">
+            </div>
+            <div class="book-details">
+                <div class="book-title">{{ book_name[i] }}</div>
+                <div class="book-author">{{ author[i] }}</div>
+                <div class="book-stats">
+                    <span class="text-warning"><i class="fas fa-star"></i> {{ '%.1f'|format(avg_rating[i]) }} / 5 ({{ votes[i] }} reviews)</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="text-center mb-5">
+        <div class="text-muted mb-3">
+            Page <strong>{{ current_page }}</strong> of <strong>{{ total_pages }}</strong>
+        </div>
+        {% if current_page > 1 %}
+            <a href="{{ url_for('index', page=current_page-1, method=method, m=m_value) }}" class="btn btn-primary me-2">← Previous</a>
+        {% endif %}
+        <span class="btn btn-outline-light disabled">{{ current_page }} / {{ total_pages }}</span>
+        {% if current_page < total_pages %}
+            <a href="{{ url_for('index', page=current_page+1, method=method, m=m_value) }}" class="btn btn-primary ms-2">Next →</a>
+        {% endif %}
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <p class="mb-0">© 2026 Book Recommendation System (BRS)</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // mSelect
+    const mSelect = document.getElementById("mSelect");
+    if (mSelect) {
+        mSelect.onchange = function() {
+            window.location.href = "{{ url_for('index') }}?method=weighted&m=" + this.value;
+        };
+    }
+
+    // Autocomplete
+    const searchInput = document.getElementById("searchInput");
+    const autocompleteList = document.getElementById("autocompleteList");
+
+    let searchTimer;
+    let searchRequest;
+    searchInput.addEventListener("input", function() {
+        const q = this.value.trim();
+        clearTimeout(searchTimer);
+        if (searchRequest) searchRequest.abort();
+        if (q.length < 2) {
+            autocompleteList.innerHTML = "";
+            return;
+        }
+        searchTimer = setTimeout(() => {
+            searchRequest = new AbortController();
+            fetch(`/api/search-suggestions?q=${encodeURIComponent(q)}`, {
+                signal: searchRequest.signal,
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Suggestion request failed');
+                return res.json();
+            })
+            .then(data => {
+                autocompleteList.innerHTML = "";
+                data.forEach(book => {
+                    const div = document.createElement("div");
+                    div.className = 'autocomplete-suggestion';
+                    const image = document.createElement('img');
+                    image.src = book.thumbnail;
+                    image.alt = '';
+                    const details = document.createElement('span');
+                    const title = document.createElement('strong');
+                    title.textContent = book.title;
+                    const author = document.createElement('small');
+                    author.textContent = book.author;
+                    details.append(title, author);
+                    div.append(image, details);
+                    div.addEventListener("click", function() {
+                        window.location.href = `/book_details?title=${encodeURIComponent(book.title)}`;
+                    });
+                    autocompleteList.appendChild(div);
+                });
+            }).catch(error => {
+                if (error.name !== 'AbortError') autocompleteList.innerHTML = "";
+            });
+        }, 300);
+    });
+
+    // Close autocomplete when clicking outside
+    document.addEventListener("click", function(e) {
+        if (e.target !== searchInput) {
+            autocompleteList.innerHTML = "";
+        }
+    });
+</script>
+</body>
+</html>

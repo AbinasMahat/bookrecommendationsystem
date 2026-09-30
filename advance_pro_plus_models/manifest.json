@@ -1,0 +1,26 @@
+{
+    "project_name": "Multi-Algorithm Hybrid Book Recommendation System",
+    "version": "3.0-PRO-PLUS",
+    "trained_at": "2026-09-02 21:41:08.764637",
+    "dataset_stats": {
+        "total_books": 267912,
+        "excluded_filters": [
+            "Harry Potter"
+        ],
+        "tfidf_features": 25000
+    },
+    "model_components": {
+        "content_based": "TF-IDF Vectorizer + Cosine Similarity",
+        "collaborative": "Surprise SVD Matrix Factorization",
+        "sequential": "PyTorch SASRec Transformer",
+        "database": "SQLite (database.py)"
+    },
+    "exported_files": [
+        "books_data.pkl",
+        "tfidf_vectorizer.pkl",
+        "tfidf_matrix.pkl",
+        "svd_model.pkl",
+        "sasrec_weights.pt",
+        "sasrec_mappings.pkl"
+    ]
+}

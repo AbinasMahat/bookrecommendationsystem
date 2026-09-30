@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Your Reading Profile | Book Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+    <style>
+        body { padding-top: 76px; }
+        .onboarding-shell { max-width: 1000px; margin: 42px auto; }
+        .onboarding-header { max-width: 650px; margin-bottom: 26px; }
+        .onboarding-header h1 { color: var(--green-dark); letter-spacing: -.04em; }
+        .favorite-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        .favorite-option { position: relative; }
+        .favorite-option input { position: absolute; opacity: 0; }
+        .favorite-option label { display: block; height: 100%; padding: 17px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; transition: .2s; }
+        .favorite-option label:hover { border-color: var(--green); transform: translateY(-2px); }
+        .favorite-option input:checked + label { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(215,107,77,.16); }
+        .favorite-option input:checked + label::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: 14px; top: 12px; color: var(--coral); }
+        .favorite-title { display: block; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+        .favorite-author { color: var(--ink-soft); font-size: .85rem; }
+    </style>
+</head>
+<body>
+    <main class="container onboarding-shell">
+        <div class="onboarding-header">
+            <span class="eyebrow">A better first recommendation</span>
+            <h1>What kind of reader are you, {{ username }}?</h1>
+            <p class="text-muted">Choose at least two books you love. We will use them as your first taste profile while your reading history grows.</p>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
+        {% endwith %}
+        <form method="POST">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <div class="favorite-grid mb-4">
+                {% for book in favorite_books %}
+                <div class="favorite-option">
+                    <input id="favorite-{{ loop.index }}" type="checkbox" name="favorite_titles" value="{{ book['Book-Title'] }}">
+                    <label for="favorite-{{ loop.index }}">
+                        <span class="favorite-title">{{ book['Book-Title'] }}</span>
+                        <span class="favorite-author">{{ book['Book-Author'] }}</span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="btn btn-recommend px-4" type="submit"><i class="fas fa-wand-magic-sparkles"></i> Build My Reading Profile</button>
+        </form>
+    </main>
+</body>
+</html>

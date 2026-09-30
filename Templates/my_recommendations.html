@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Recommendations | Book Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+    <style>
+        body { padding-top: 76px; }
+        .personalized-shell { max-width: 1180px; margin: 32px auto 60px; }
+        .personalized-hero { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 32px; }
+        .personalized-hero h1 { color: var(--green-dark); letter-spacing: -.04em; }
+        .personalized-hero p { max-width: 620px; }
+        .section-divider { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 36px 0 16px; }
+        .section-divider .section-title { margin: 0; }
+        .empty-panel { padding: 42px 20px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; background: rgba(255,253,248,.7); }
+        .empty-panel i { color: var(--gold); font-size: 2rem; margin-bottom: 12px; }
+        .recommendation-explanation { margin-top: 9px; color: var(--ink-soft); font-size: .72rem; line-height: 1.35; }
+        .recommendation-explanation i { color: var(--coral); margin-right: 3px; }
+        @media (max-width: 600px) { .personalized-hero { display: block; } .personalized-hero .btn { margin-top: 14px; } }
+    </style>
+</head>
+<body>
+{% include 'navbar.html' %}
+
+<main class="container personalized-shell">
+    <section class="personalized-hero">
+        <div><span class="eyebrow">Your reading space</span><h1>My Recommendations</h1><p class="text-muted mb-0">A quieter home for books shaped by your ratings, saved titles, and recent browsing.</p></div>
+        <a href="{{ url_for('recommend_ui') }}" class="btn btn-recommend"><i class="fas fa-wand-magic-sparkles"></i> Explore by Title</a>
+    </section>
+
+    <section>
+        <div class="section-divider"><div><h2 class="section-title"><i class="fas fa-user-check"></i> Recommended For You</h2><p class="text-muted mb-0">Personalized from your reading signals</p></div></div>
+        {% if personalized %}
+        <div class="books-grid">
+            {% for item in personalized %}
+            <a href="{{ url_for('book_details', title=item.title|urlencode) }}" class="book-card">
+                <div class="image-container"><img src="{{ normalize_image_url(item.image) }}" class="book-image book-cover" alt="{{ item.title }}" onerror="this.onerror=null;this.src='/static/book-placeholder.svg';"></div>
+                <div class="book-details"><div class="book-title">{{ item.title }}</div><div class="book-author">{{ item.author }}</div><div class="book-stats"><span class="match-badge" title="Matched via Hybrid SVD + Content Similarity Engine"><i class="fas fa-wand-magic-sparkles"></i> {{ item.match_percentage or ((item.similarity_score * 100)|round(0)) }}% Match</span><span class="text-warning"><i class="fas fa-star"></i> {{ item.predicted_rating }} / 5</span></div>{% if item.explanation %}<div class="recommendation-explanation"><i class="fas fa-sparkles"></i> {{ item.explanation }}</div>{% endif %}</div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-panel"><svg viewBox="0 0 64 64" role="img" aria-label="Compass icon"><circle cx="32" cy="32" r="25" fill="none" stroke="currentColor" stroke-width="4"/><path d="m41 23-7 16-16 7 7-16 16-7Z" fill="none" stroke="currentColor" stroke-width="4"/></svg><h4>Build your reading profile</h4><p class="text-muted">Rate a few books or complete onboarding so recommendations can learn your taste.</p><a href="{{ url_for('onboarding') }}" class="btn btn-primary">Choose Favorite Books</a></div>
+        {% endif %}
+    </section>
+
+    <section>
+        <div class="section-divider"><div><h2 class="section-title"><i class="fas fa-history"></i> Recently Viewed</h2><p class="text-muted mb-0">Pick up where you left off</p></div></div>
+        {% if recently_viewed %}
+        <div class="books-grid">
+            {% for item in recently_viewed %}<a href="{{ url_for('book_details', title=item.book_title|urlencode) }}" class="book-card"><div class="image-container"><img src="{{ normalize_image_url(item.image) }}" class="book-image book-cover" alt="{{ item.book_title }}" onerror="this.onerror=null;this.src='/static/book-placeholder.svg';"></div><div class="book-details"><div class="book-title">{{ item.book_title }}</div><div class="book-author">{{ item.author }}</div></div></a>{% endfor %}
+        </div>
+        {% else %}<div class="empty-panel"><svg viewBox="0 0 64 64" role="img" aria-label="History icon"><circle cx="32" cy="34" r="22" fill="none" stroke="currentColor" stroke-width="4"/><path d="M32 22v13l9 6M10 27v-12h12" fill="none" stroke="currentColor" stroke-width="4"/></svg><p class="text-muted">Books you open will appear here.</p><a href="{{ url_for('index') }}" class="btn btn-primary">Explore Reader Favorites</a></div>{% endif %}
+    </section>
+</main>
+<footer class="footer"><div class="container"><p class="mb-0">© 2026 Book Recommendation System (BRS)</p></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

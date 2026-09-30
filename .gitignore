@@ -1,0 +1,9 @@
+# Ignore large ML weights and model artifacts
+*.pt
+*.pkl
+production_models/
+instance/
+*.db
+venv/
+.venv/
+__pycache__/

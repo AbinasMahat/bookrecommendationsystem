@@ -1,0 +1,10 @@
+{
+  "evaluated_at": "2026-09-29T02:29:07.811846+00:00",
+  "protocol": "Leave-one-out popularity baseline, top 8",
+  "sample_count": 78255,
+  "metrics": {
+    "precision_at_8": 0.0014,
+    "recall_at_8": 0.0115,
+    "ndcg_at_8": 0.0115
+  }
+}

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommend | Book Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #2E86C1;
+            --secondary: #1A5276;
+            --accent: #F39C12;
+            --dark-bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text: #f5f5f5;
+        }
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text);
+            font-family: 'Montserrat', sans-serif;
+            padding-top: 76px;
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            padding: 12px 0;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: white !important;
+        }
+        .navbar-brand i { color: var(--accent); margin-right: 8px; }
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            margin: 0 6px;
+        }
+        .nav-link:hover, .nav-link.active { color: white !important; }
+        .page-title {
+            font-family: 'Merriweather', serif;
+            font-size: 2.3rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 30px 0 10px;
+            cursor: pointer;
+        }
+        .page-title::after {
+            content: '';
+            display: block;
+            width: 90px;
+            height: 4px;
+            background: var(--accent);
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+        .recommendation-form {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .form-control, .form-select {
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #2c2c2c;
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25);
+        }
+        .btn-recommend {
+            background: var(--accent);
+            border: none;
+            color: #222;
+            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+        .btn-recommend:hover {
+            background: #e67e22;
+            color: #222;
+            transform: translateY(-2px);
+        }
+        .book-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.35s ease;
+            height: 100%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+        .book-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 16px 30px rgba(0,0,0,0.45);
+        }
+        .recommendation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 40px;
+        }
+        .recommendation-grid .image-container {
+            aspect-ratio: 2 / 3;
+            width: 100%;
+            background: #2a2a2a;
+            overflow: hidden;
+        }
+        .recommendation-grid .book-image {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .book-card:hover .book-image { transform: scale(1.06); }
+        .book-details { padding: 18px; flex: 1; }
+        .book-title {
+            font-family: 'Merriweather', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            height: 48px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 6px;
+        }
+        .book-author {
+            color: #bbb;
+            font-size: 0.9rem;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        .score-badge { font-size: 0.85rem; margin-bottom: 4px; }
+        .recommendation-rating { color: var(--gold); font-size: .84rem; font-weight: 700; }
+        .footer {
+            background: #0a0a0a;
+            padding: 25px 0;
+            text-align: center;
+            border-top: 1px solid #333;
+            margin-top: 50px;
+        }
+        #graph-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 35px;
+            display: none;
+        }
+        .recommend-search { position: relative; }
+        .recommend-suggestions { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; }
+        .recommend-suggestion { padding: 11px 14px; cursor: pointer; border-bottom: 1px solid var(--line); }
+        .recommend-suggestion:last-child { border-bottom: 0; }
+        .recommend-suggestion:hover, .recommend-suggestion.active { background: var(--paper-deep); color: var(--green); }
+        .recommend-loading { display: none; }
+    </style>
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+</head>
+<body>
+
+{% include 'navbar.html' %}
+
+<div class="container">
+
+    <h1 class="page-title" onclick="toggleGraph()">Book Recommendations</h1>
+    <p class="text-center text-muted mb-4">Recommendations automatically blended from all available AI models</p>
+
+    <!-- Graph -->
+    {% if graph_titles and graph_scores %}
+    <div id="graph-container">
+        <h5 class="mb-3" style="color: var(--accent);">Similarity Scores</h5>
+        <canvas id="similarityChart" height="120"></canvas>
+    </div>
+    {% endif %}
+
+    <!-- Search Form -->
+    <div class="recommendation-form">
+        <h4 class="mb-4" style="color: var(--accent);">
+            <i class="fas fa-search"></i> Find Your Next Favorite Book
+        </h4>
+
+        <form action="{{ url_for('recommend') }}" method="post">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6 recommend-search">
+                    <label class="form-label">Book Title</label>
+                    <input name="user_input" type="text" class="form-control" 
+                           id="recommendSearchInput" autocomplete="off" aria-autocomplete="list"
+                           placeholder="e.g. Harry Potter, The Hobbit..." 
+                           value="{{ search_query or '' }}" required>
+                    <div id="recommendSuggestions" class="recommend-suggestions autocomplete-items" role="listbox"></div>
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-recommend w-100" id="recommendSubmit">
+                        <i class="fas fa-wand-magic-sparkles"></i> Get Automatic Recommendations
+                        <span class="spinner-border spinner-border-sm recommend-loading ms-2" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+        <div id="recommendationSkeleton" class="recommendation-skeleton" aria-live="polite" aria-hidden="true">
+            <div class="skeleton-heading"></div>
+            <div class="skeleton-grid">
+                <span></span><span></span><span></span><span></span>
+            </div>
+            <p>Blending recommendations from your reading signals...</p>
+        </div>
+    </div>
+
+    <!-- Error -->
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Algorithm used badge -->
+    {% if algorithm_used %}
+    <div class="text-center mb-4">
+        <span class="badge bg-info text-dark px-3 py-2">
+            Algorithm used: {{ algorithm_used }}
+        </span>
+    </div>
+    {% endif %}
+
+    <!-- Results -->
+    {% if data %}
+    <div class="recommendation-grid">
+        {% for item in data %}
+            <a href="{{ url_for('book_details', title=item.title|urlencode) }}" class="book-card">
+                <div class="image-container">
+                    <img src="{{ normalize_image_url(item.image) }}" class="book-image book-cover" alt="{{ item.title }}"
+                        loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/static/book-placeholder.svg';">
+                </div>
+                <div class="book-details">
+                    <div class="book-title">{{ item.title }}</div>
+                    <div class="book-author">by {{ item.author }}</div>
+                    <div class="score-badge text-warning">
+                        <span class="match-badge" title="Matched via Hybrid SVD + Content Similarity Engine"><i class="fas fa-wand-magic-sparkles"></i> {{ item.match_percentage or ((item.similarity_score * 100)|round(0)) }}% Match</span>
+                    </div>
+                    <div class="recommendation-rating">
+                        <i class="fas fa-star"></i> {{ item.predicted_rating }} / 5
+                    </div>
+                    {% if item.explanation %}
+                    <div class="recommendation-explanation">
+                        <i class="fas fa-sparkles"></i> {{ item.explanation }}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+    {% elif not error %}
+    <div class="text-center text-muted py-5">
+        <i class="fas fa-book-open fa-3x mb-3"></i>
+        <p>Enter a book title above to get smart recommendations</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <p class="mb-0">© 2026 Book Recommendation System (BRS) | SVD + Hybrid Recommendation Engine</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let chart = null;
+    let visible = false;
+
+    const recommendationForm = document.querySelector('.recommendation-form form');
+    const recommendationInput = document.getElementById('recommendSearchInput');
+    const recommendationSuggestions = document.getElementById('recommendSuggestions');
+    const recommendationSubmit = document.getElementById('recommendSubmit');
+    const recommendationSkeleton = document.getElementById('recommendationSkeleton');
+    let suggestionTimer;
+
+    function clearRecommendationSuggestions() {
+        recommendationSuggestions.innerHTML = '';
+    }
+
+    function showRecommendationSuggestions(titles) {
+        clearRecommendationSuggestions();
+        titles.forEach(title => {
+            const option = document.createElement('div');
+            option.className = 'recommend-suggestion';
+            option.setAttribute('role', 'option');
+            option.textContent = title;
+            option.addEventListener('mousedown', event => {
+                event.preventDefault();
+                recommendationInput.value = title;
+                clearRecommendationSuggestions();
+            });
+            recommendationSuggestions.appendChild(option);
+        });
+    }
+
+    recommendationInput.addEventListener('input', function() {
+        clearTimeout(suggestionTimer);
+        const query = this.value.trim();
+        if (query.length < 2) {
+            clearRecommendationSuggestions();
+            return;
+        }
+        suggestionTimer = setTimeout(() => {
+            fetch(`/api/search_books?q=${encodeURIComponent(query)}`)
+                .then(response => response.ok ? response.json() : [])
+                .then(showRecommendationSuggestions)
+                .catch(() => clearRecommendationSuggestions());
+        }, 180);
+    });
+
+    recommendationForm.addEventListener('submit', function() {
+        recommendationSubmit.disabled = true;
+        recommendationSubmit.querySelector('.recommend-loading').style.display = 'inline-block';
+        recommendationSkeleton.classList.add('is-visible');
+        recommendationSkeleton.setAttribute('aria-hidden', 'false');
+        clearRecommendationSuggestions();
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.recommend-search')) clearRecommendationSuggestions();
+    });
+
+    function toggleGraph() {
+        const box = document.getElementById("graph-container");
+        if (!box) return;
+        visible = !visible;
+        box.style.display = visible ? "block" : "none";
+        if (visible && !chart) drawChart();
+    }
+
+    function drawChart() {
+        const ctx = document.getElementById("similarityChart").getContext("2d");
+        chart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: {{ graph_titles | tojson if graph_titles else '[]' }},
+                datasets: [{
+                    label: "Similarity Score",
+                    data: {{ graph_scores | tojson if graph_scores else '[]' }},
+                    backgroundColor: "rgba(243, 156, 18, 0.8)",
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 1 }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

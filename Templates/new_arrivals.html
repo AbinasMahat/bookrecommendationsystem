@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Arrivals | Book Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+    <style>
+        body { padding-top: 76px; }
+        .arrivals-shell { max-width: 1180px; margin: 32px auto 60px; }
+        .arrival-meta { color: var(--coral); font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+        .empty-panel { padding: 50px 20px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; background: rgba(255,253,248,.7); }
+        .empty-panel i { color: var(--gold); font-size: 2rem; margin-bottom: 12px; }
+        .book-card { display: block; }
+    </style>
+</head>
+<body>
+{% include 'navbar.html' %}
+<main class="container arrivals-shell">
+    <div class="mb-4"><span class="eyebrow">Fresh from the catalog</span><h1 class="page-title text-start mt-2">New Arrivals</h1><p class="text-muted">Recently added books, listed newest first.</p></div>
+    {% if books %}
+    <div class="books-grid">
+        {% for book in books %}
+        <article class="book-card">
+            <a href="{{ url_for('book_details', title=book.title|urlencode) }}" class="text-decoration-none text-reset">
+                <div class="image-container"><img src="{{ normalize_image_url(book.image_url) }}" class="book-image book-cover" alt="{{ book.title }}" onerror="this.onerror=null;this.src='/static/book-placeholder.svg';"></div>
+                <div class="book-details"><div class="arrival-meta">Added {{ book.created_at.strftime('%b %d, %Y') }}</div><div class="book-title mt-2">{{ book.title }}</div><div class="book-author">{{ book.author }}</div><div class="book-stats"><span><i class="fas fa-tag text-success"></i> {{ book.genre or 'General' }}</span><span><i class="fas fa-star text-warning"></i> {{ '%.1f'|format(book.initial_rating) }} / 5</span></div></div>
+            </a>
+            <div class="card-actions px-3 pb-3">
+                <a href="{{ url_for('book_details', title=book.title|urlencode) }}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i> View Details</a>
+                {% if username %}<form action="{{ url_for('add_wishlist') }}" method="POST"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="isbn" value="{{ book.isbn }}"><input type="hidden" name="book_title" value="{{ book.title }}"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="far fa-heart"></i> Wishlist</button></form>{% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}<div class="empty-panel"><svg viewBox="0 0 64 64" role="img" aria-label="New arrivals icon"><path d="M32 8v48M8 32h48M15 15l34 34M49 15 15 49" stroke="currentColor" stroke-width="4"/><circle cx="32" cy="32" r="24" fill="none" stroke="currentColor" stroke-width="4"/></svg><h4>No new arrivals yet</h4><p class="text-muted">Newly uploaded books will appear here.</p><a href="{{ url_for('index') }}" class="btn btn-primary">Explore Reader Favorites</a></div>{% endif %}
+</main>
+<footer class="footer"><div class="container"><p class="mb-0">© 2026 Book Recommendation System (BRS)</p></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

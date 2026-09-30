@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Book Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+</head>
+<body class="pt-5">
+{% include 'navbar.html' %}
+<main class="container py-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div><span class="eyebrow">Catalog operations</span><h1 class="page-title text-start mb-0">Admin Dashboard</h1></div>
+        {% if editing_book %}<a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">Cancel edit</a>{% endif %}
+    </div>
+    <section class="recommendation-form mb-5">
+        <h2 class="section-title mt-0"><i class="fas fa-{{ 'pen-to-square' if editing_book else 'plus' }}"></i> {{ 'Edit Book' if editing_book else 'Add New Book' }}</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Title</label><input name="title" class="form-control" required value="{{ editing_book.title if editing_book else '' }}"></div>
+                <div class="col-md-6"><label class="form-label">Author</label><input name="author" class="form-control" required value="{{ editing_book.author if editing_book else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Genre / Category</label><input name="genre" class="form-control" value="{{ editing_book.genre if editing_book else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">ISBN / ID</label><input name="isbn" class="form-control" required value="{{ editing_book.isbn if editing_book else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Cover image</label><input type="file" name="cover" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif"></div>
+                <div class="col-12"><label class="form-label">External image URL</label><input type="url" name="image_url" class="form-control" placeholder="https://..." value="{{ editing_book.image_url if editing_book and not editing_book.image_url.startswith('/static/uploads/') else '' }}"></div>
+                <div class="col-12"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="4">{{ editing_book.description if editing_book else '' }}</textarea></div>
+                <div class="col-12"><button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> {{ 'Save Changes' if editing_book else 'Add Book' }}</button></div>
+            </div>
+        </form>
+    </section>
+    <section class="recommendation-form mb-5">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div><h2 class="section-title mt-0 mb-1"><i class="fas fa-file-word"></i> Reference Word Document</h2><p class="text-muted mb-0">Upload one .docx file for the system to read and retain as admin reference material.</p></div>
+            {% if reference_document %}<span class="badge bg-success">Loaded {{ reference_document.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</span>{% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('upload_reference_document') }}" enctype="multipart/form-data" class="row g-3 align-items-end mt-1">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <div class="col-md-9"><label class="form-label" for="reference_document">Word file (.docx)</label><input id="reference_document" type="file" name="reference_document" class="form-control" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required></div>
+            <div class="col-md-3"><button class="btn btn-primary w-100" type="submit"><i class="fas fa-upload"></i> Upload and Read</button></div>
+        </form>
+        {% if reference_document %}<p class="small text-muted mt-3 mb-0"><i class="fas fa-file-lines"></i> {{ reference_document.original_filename }} | {{ reference_document.extracted_text|length }} characters extracted</p>{% endif %}
+    </section>
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="section-title mt-0 mb-0"><i class="fas fa-layer-group"></i> Uploaded Books</h2><span class="text-muted">{{ books|length }} books</span></div>
+        {% if books %}<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Book</th><th>Author</th><th>ISBN / ID</th><th>Added</th><th class="text-end">Actions</th></tr></thead><tbody>
+        {% for book in books %}<tr><td><div class="d-flex align-items-center gap-3"><img src="{{ normalize_image_url(book.image_url) }}" alt="" width="42" height="58" style="object-fit:cover"><strong>{{ book.title }}</strong></div></td><td>{{ book.author }}</td><td>{{ book.isbn }}</td><td>{{ book.created_at.strftime('%Y-%m-%d') }}</td><td class="text-end"><a href="{{ url_for('admin_dashboard', edit=book.id) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-pen"></i></a><form method="POST" action="{{ url_for('delete_admin_book', book_id=book.id) }}" class="d-inline" onsubmit="return confirm('Delete this book?');"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form></td></tr>{% endfor %}
+        </tbody></table></div>{% else %}<div class="empty-panel"><i class="fas fa-book-open"></i><p class="mb-0">No admin books have been added yet.</p></div>{% endif %}
+    </section>
+</main>
+<footer class="footer"><div class="container"><p class="mb-0">© 2026 Book Recommendation System (BRS)</p></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
